@@ -117,7 +117,7 @@
     )
     ;; Transfer the NFT ownership to this contract's principal
     (try! (transfer-nft nft-asset-contract (get token-id nft-asset) tx-sender
-      (as-contract tx-sender)
+      current-contract
     ))
     ;; List the NFT in the listings map
     (map-set listings listing-id
@@ -160,7 +160,9 @@
     ;; Delete the listing
     (map-delete listings listing-id)
     ;; Transfer the NFT from this contract's principal back to the creator's principal
-    (as-contract (transfer-nft nft-asset-contract (get token-id listing) tx-sender maker))
+    (transfer-nft nft-asset-contract (get token-id listing) current-contract
+      maker
+    )
   )
 )
 
@@ -217,7 +219,9 @@
     ;; Validate that the purchase can be fulfilled
     (try! (assert-can-fulfil (contract-of nft-asset-contract) none listing))
     ;; Transfer the NFT to the purchaser (caller of the function)
-    (try! (as-contract (transfer-nft nft-asset-contract (get token-id listing) tx-sender taker)))
+    (try! (transfer-nft nft-asset-contract (get token-id listing) current-contract
+      taker
+    ))
     ;; Transfer the STX payment from the purchaser to the creator of the NFT
     (try! (stx-transfer? (get price listing) taker (get maker listing)))
     ;; Remove the NFT from the marketplace listings
@@ -244,7 +248,9 @@
       (some (contract-of payment-asset-contract)) listing
     ))
     ;; Transfer the NFT to the purchaser (caller of the function)
-    (try! (as-contract (transfer-nft nft-asset-contract (get token-id listing) tx-sender taker)))
+    (try! (transfer-nft nft-asset-contract (get token-id listing) current-contract
+      taker
+    ))
     ;; Transfer the tokens as payment from the purchaser to the creator of the NFT
     (try! (transfer-ft payment-asset-contract (get price listing) taker
       (get maker listing)
